@@ -2881,4 +2881,86 @@ mod tests {
             previous = Some(name);
         }
     }
+
+    #[test]
+    fn registry_changes_consistency_of_forward_and_reverse_lookups() {
+        let (env, registry_contract, contract_id, existing_admin, registry_client, client) = setup();
+        let owner = Address::generate(&env);
+        let protocol_wallet = Address::generate(&env);
+        let name = s(&env, "immutable-name");
+
+        let talos_id = create_talos_with_auth(
+            &env,
+            &registry_client,
+            &registry_contract,
+            &owner,
+            &protocol_wallet,
+        );
+
+        register_name_with_auth(
+            &env,
+            &client,
+            &contract_id,
+            &registry_contract,
+            &owner,
+            talos_id,
+            &name,
+        );
+
+        assert_eq!(client.resolve_name(&name), Some(talos_id));
+        assert_eq!(client.name_of(&talos_id), Some(name.clone()));
+
+        // Admin setup
+        let admin = Address::generate(&env);
+        client
+            .mock_auths(&[MockAuth {
+                address: &existing_admin,
+                invoke: &MockAuthInvoke {
+                    contract: &contract_id,
+                    fn_name: "set_admin",
+                    args: (admin.clone(),).into_val(&env),
+                    sub_invokes: &[],
+                },
+            }])
+            .set_admin(&admin);
+
+        client
+            .mock_auths(&[MockAuth {
+                address: &admin,
+                invoke: &MockAuthInvoke {
+                    contract: &contract_id,
+                    fn_name: "set_timelock_config",
+                    args: (3600u64, 86400u64).into_val(&env),
+                    sub_invokes: &[],
+                },
+            }])
+            .set_timelock_config(&3600, &86400);
+
+        let new_registry = Address::generate(&env);
+        let action = AdminAction::SetRegistryContract(new_registry);
+
+        let proposal_id = client
+            .mock_auths(&[MockAuth {
+                address: &admin,
+                invoke: &MockAuthInvoke {
+                    contract: &contract_id,
+                    fn_name: "schedule_action",
+                    args: (action.clone(), 3600u64).into_val(&env),
+                    sub_invokes: &[],
+                },
+            }])
+            .schedule_action(&action, &3600);
+
+        env.ledger().with_mut(|li| {
+            li.timestamp += 3600;
+        });
+
+        client.execute_action(&proposal_id);
+
+        let after_resolved = client.resolve_name(&name);
+        let after_name_of = client.name_of(&talos_id);
+
+        assert_eq!(after_resolved, Some(talos_id), "resolve_name should remain unaffected by registry switch");
+        assert_eq!(after_name_of, Some(name), "name_of should remain unaffected by registry switch");
+    }
 }
