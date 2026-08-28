@@ -13,7 +13,7 @@ pub mod allowlist;
 #[cfg(all(test, not(target_arch = "wasm32")))]
 extern crate std;
 
-use soroban_sdk::{contract, contractimpl, contracttype, symbol_short, Address, Env, String};
+use soroban_sdk::{contract, contractimpl, contracttype, symbol_short, Address, Env, String, Vec};
 use storage_migration;
 use ttl_manager;
 use pause_control;
@@ -150,6 +150,8 @@ pub enum DataKey {
     TimelockProposal(u64),
     NextTimelockId,
     LastTouched(u32),
+    Guardians,
+    PauseState(PauseDomain),
 }
 
 // ── Events ──────────────────────────────────────────────────────────
