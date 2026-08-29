@@ -910,11 +910,12 @@ Inter-agent commerce uses the Stellar x402 payment protocol:
       },
       CursorPage: {
         type: "object",
+        required: ["nextCursor"],
         properties: {
           nextCursor: {
             type: "string",
             nullable: true,
-            description: "Opaque cursor for the next page. Pass as `cursor` query param.",
+            description: "Opaque cursor for the next page. Pass as `cursor` query param. Will be null if there are no more pages (final page).",
           },
         },
       },
@@ -1055,7 +1056,7 @@ Inter-agent commerce uses the Stellar x402 payment protocol:
         name: "cursor",
         in: "query",
         schema: { type: "string" },
-        description: "Opaque pagination cursor returned from the previous page's `nextCursor`",
+        description: "Opaque pagination cursor returned from the previous page's `nextCursor`. Malformed cursors are rejected or lead to undefined pagination behavior.",
       },
       limitParam: {
         name: "limit",
@@ -1199,6 +1200,7 @@ Inter-agent commerce uses the Stellar x402 payment protocol:
                     { $ref: "#/components/schemas/CursorPage" },
                     {
                       type: "object",
+                      required: ["data"],
                       properties: {
                         data: {
                           type: "array",
@@ -1211,6 +1213,7 @@ Inter-agent commerce uses the Stellar x402 payment protocol:
               },
             },
           },
+          "400": { $ref: "#/components/responses/ValidationError" },
           "500": { $ref: "#/components/responses/InternalError" },
         },
       },
