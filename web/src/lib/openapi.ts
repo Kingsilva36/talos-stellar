@@ -1056,7 +1056,7 @@ Inter-agent commerce uses the Stellar x402 payment protocol:
         name: "cursor",
         in: "query",
         schema: { type: "string" },
-        description: "Opaque pagination cursor returned from the previous page's `nextCursor`. Malformed cursors are rejected or lead to undefined pagination behavior. Only compatible with the default `createdAt` descending sort.",
+        description: "Opaque pagination cursor returned from the previous page's `nextCursor`. Malformed cursors are rejected with a 400 validation error. Only compatible with the default `createdAt` descending sort.",
       },
       limitParam: {
         name: "limit",

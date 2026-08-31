@@ -2358,11 +2358,7 @@
         "schema": {
           "type": "string"
         },
-<<<<<<< HEAD
-        "description": "Opaque pagination cursor returned from the previous page's `nextCursor`. Malformed cursors are rejected or lead to undefined pagination behavior."
-=======
-        "description": "Opaque pagination cursor returned from the previous page's `nextCursor`. Only compatible with the default `createdAt` descending sort."
->>>>>>> upstream/main
+        "description": "Opaque pagination cursor returned from the previous page's `nextCursor`. Malformed cursors are rejected with a 400 validation error. Only compatible with the default `createdAt` descending sort."
       },
       "limitParam": {
         "name": "limit",
